@@ -1,4 +1,4 @@
-export type ElementType = 'fire' | 'ice' | 'storm'
+export type ElementType = 'volcano' | 'blizzard' | 'storm'
 
 export interface EventRecord {
     date: string
@@ -18,13 +18,13 @@ export const eventTimes = [
 ]
 
 export const elements: ElementType[] = [
-    'fire',
-    'ice',
+    'volcano',
+    'blizzard',
     'storm',
 ]
 
 export const elementLabels: Record<ElementType, string> = {
-    fire: 'Fire',
-    ice: 'Ice',
+    volcano: 'Volcano',
+    blizzard: 'Blizzard',
     storm: 'Storm',
 }

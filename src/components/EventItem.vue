@@ -17,8 +17,8 @@ const elementInfo: Record<
     icon: string
   }
 > = {
-  fire: { label: 'Fire', icon: '🔥' },
-  ice: { label: 'Ice', icon: '❄️' },
+  volcano: { label: 'Volcano', icon: '🔥' },
+  blizzard: { label: 'Blizzard', icon: '❄️' },
   storm: { label: 'Storm', icon: '⚡' },
 }
 </script>

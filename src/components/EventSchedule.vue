@@ -10,7 +10,7 @@ const props = defineProps<{
   date: string
 }>()
 
-const elements: ElementType[] = ['fire', 'ice', 'storm']
+const elements: ElementType[] = ['volcano', 'blizzard', 'storm']
 const now = ref(new Date())
 const eventItemRefs = ref<any[]>([])
 let timer: ReturnType<typeof setInterval>
