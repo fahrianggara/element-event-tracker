@@ -32,7 +32,7 @@ const todayEvents = computed(() => {
   >
     <button 
       @click="isOpen = !isOpen"
-      class="flex w-full items-center justify-between p-5 outline-none sm:p-6"
+      class="flex w-full items-center justify-between p-5 outline-none sm:p-6 cursor-pointer"
     >
       <div class="flex items-center gap-3">
         <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
