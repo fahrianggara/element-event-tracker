@@ -15,7 +15,6 @@ const now = ref(new Date())
 const eventItemRefs = ref<any[]>([])
 let timer: ReturnType<typeof setInterval>
 
-// event duration limits active status to one hour
 const EVENT_DURATION = 60
 
 const formatDate = (date: Date = new Date()) => {
@@ -29,80 +28,101 @@ const formatDate = (date: Date = new Date()) => {
 const predictions = computed<ElementType[]>(() => {
   const [year, month, day] = props.date.split('-').map(Number)
   
-  // parses date as utc to avoid browser timezone shifts
+  // avoids browser timezone shifts
   const selected = Date.UTC(year, month - 1, day)
   
-  // reference anchor set to september 1 2026
+  // sets reference anchor to september 1 2026
   const reference = Date.UTC(2026, 8, 1) 
   
   const diffDays = Math.floor((selected - reference) / 86400000)
 
   return eventTimes.map((_, index): ElementType => {
-    // chronological mapping places morning events first
+    // maps morning events first
     const chronoIndex = index < 6 ? index + 2 : index - 6
     
-    // total events passed since the reference anchor
+    // counts total events since anchor
     const totalEvents = (diffDays * 8) + chronoIndex
     
-    // offset aligns the reference date correctly with fire
+    // aligns reference date with fire
     const offset = 1 
     
-    // safe modulo resolves cycle for dates before the reference
+    // resolves cycle for past dates
     const elementIndex = (((totalEvents + offset) % elements.length) + elements.length) % elements.length
     
     return elements[elementIndex] as ElementType
   })
 })
 
-const currentTimeMinutes = computed(() => {
-  return now.value.getHours() * 60 + now.value.getMinutes()
+const currentTimeSeconds = computed(() => {
+  return now.value.getHours() * 3600 + now.value.getMinutes() * 60 + now.value.getSeconds()
 })
 
-const timeToMinutes = (time: string) => {
+const timeToSeconds = (time: string) => {
   const [hours = 0, minutes = 0] = time.split(':').map(Number)
-  return hours * 60 + minutes
+  return hours * 3600 + minutes * 60
 }
 
 const isActive = (time: string) => {
   if (props.date !== formatDate()) return false
 
-  const start = timeToMinutes(time)
-  const end = start + EVENT_DURATION
+  const start = timeToSeconds(time)
+  const end = start + (EVENT_DURATION * 60)
 
-  return currentTimeMinutes.value >= start && currentTimeMinutes.value < end
+  return currentTimeSeconds.value >= start && currentTimeSeconds.value < end
 }
 
 const nextEventTime = computed(() => {
   if (props.date !== formatDate()) return null
 
   const upcoming = eventTimes.filter(time => {
-    return timeToMinutes(time) > currentTimeMinutes.value
+    return timeToSeconds(time) > currentTimeSeconds.value
   })
 
   if (upcoming.length === 0) return null
 
-  upcoming.sort((a, b) => timeToMinutes(a) - timeToMinutes(b))
+  upcoming.sort((a, b) => timeToSeconds(a) - timeToSeconds(b))
   return upcoming[0]
 })
 
-const getRemainingText = (time: string) => {
-  if (!isActive(time)) return ''
+const formatClock = (totalSeconds: number) => {
+  const h = Math.floor(totalSeconds / 3600)
+  const m = Math.floor((totalSeconds % 3600) / 60)
+  const s = totalSeconds % 60
   
-  const start = timeToMinutes(time)
-  const end = start + EVENT_DURATION
-  const remaining = end - currentTimeMinutes.value
+  const paddedM = m.toString().padStart(2, '0')
+  const paddedS = s.toString().padStart(2, '0')
   
-  return `Berakhir dalam ${remaining} menit`
+  if (h > 0) {
+    const paddedH = h.toString().padStart(2, '0')
+    return `${paddedH}:${paddedM}:${paddedS}`
+  }
+  return `${paddedM}:${paddedS}`
+}
+
+const getCountdownInfo = (time: string) => {
+  if (isActive(time)) {
+    const end = timeToSeconds(time) + (EVENT_DURATION * 60)
+    const diff = end - currentTimeSeconds.value
+    return { label: 'Berakhir dalam', clock: formatClock(diff) }
+  }
+  
+  if (time === nextEventTime.value) {
+    const start = timeToSeconds(time)
+    const diff = start - currentTimeSeconds.value
+    return { label: 'Mulai dalam', clock: formatClock(diff) }
+  }
+  
+  return null
 }
 
 onMounted(() => {
-  // refreshes current time exactly every minute
+  // refreshes current time every second
   timer = setInterval(() => {
     now.value = new Date()
-  }, 60000)
+  }, 1000)
   
   nextTick(() => {
-    // finds active event or falls back to the next upcoming event
+    // locates target event index
     let targetIndex = eventTimes.findIndex(t => isActive(t))
     
     if (targetIndex === -1) {
@@ -113,7 +133,7 @@ onMounted(() => {
       const el = eventItemRefs.value[targetIndex].$el
       
       if (el) {
-        // automatically centers the relevant event on screen
+        // scrolls to active event
         el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
     }
@@ -121,7 +141,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  // clears the timer memory on component destruction
+  // clears interval timer
   clearInterval(timer)
 })
 </script>
@@ -146,7 +166,7 @@ onUnmounted(() => {
         :element="predictions[index] ?? null"
         :active="isActive(time)"
         :is-next="time === nextEventTime"
-        :remaining-text="getRemainingText(time)"
+        :countdown="getCountdownInfo(time)"
       />
     </div>
   </section>

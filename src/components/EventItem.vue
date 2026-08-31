@@ -6,7 +6,7 @@ defineProps<{
   element: ElementType | null
   active?: boolean
   isNext?: boolean
-  remainingText?: string
+  countdown?: { label: string; clock: string } | null
 }>()
 
 const elementInfo: Record<
@@ -34,7 +34,6 @@ const elementInfo: Record<
     ]"
   >
     <div class="flex items-center gap-4">
-      <!-- time -->
       <div class="w-16 shrink-0">
         <p
           class="text-sm font-semibold"
@@ -48,7 +47,6 @@ const elementInfo: Record<
         </p>
       </div>
 
-      <!-- element icon -->
       <div
         class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg"
         :class="
@@ -65,7 +63,6 @@ const elementInfo: Record<
         <span v-else class="text-sm text-zinc-400">?</span>
       </div>
 
-      <!-- information -->
       <div class="min-w-0 flex-1">
         <p
           v-if="element"
@@ -80,16 +77,25 @@ const elementInfo: Record<
           Belum diketahui
         </p>
 
-        <p class="mt-0.5 text-xs" :class="
-          active ? 'text-green-600/80 dark:text-green-400/80' : 
-          isNext ? 'text-blue-600/80 dark:text-blue-400/80' : 
-          'text-zinc-400 dark:text-zinc-500'
-        ">
-          {{ active ? remainingText : (isNext ? 'Akan datang' : 'Prediksi event') }}
+        <!-- dynamic digital clock ux -->
+        <div v-if="countdown" class="mt-1 flex items-center gap-1.5">
+          <span class="text-[11px] text-zinc-500 dark:text-zinc-400">{{ countdown.label }}</span>
+          <span 
+            class="inline-flex items-center rounded-md px-1.5 py-0.5 font-mono text-[11px] font-bold tracking-widest shadow-sm ring-1 ring-inset"
+            :class="
+              active 
+                ? 'bg-green-100 text-green-700 ring-green-500/20 dark:bg-green-900/50 dark:text-green-300 dark:ring-green-500/30' 
+                : 'bg-blue-100 text-blue-700 ring-blue-500/20 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-500/30'
+            "
+          >
+            {{ countdown.clock }}
+          </span>
+        </div>
+        <p v-else class="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+          Prediksi event
         </p>
       </div>
 
-      <!-- active and next badges -->
       <div v-if="active" class="flex items-center gap-2">
         <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
         <span class="text-xs font-medium text-green-600 dark:text-green-400">
