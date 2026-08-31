@@ -25,9 +25,9 @@ const formatDate = (date: Date = new Date()) => {
   return `${year}-${month}-${day}`
 }
 
-// format tanggal ke bahasa indonesia
 const formattedHumanDate = computed(() => {
-  const [year, month, day] = props.date.split('-').map(Number)
+  // tambahkan nilai default
+  const [year = 0, month = 1, day = 1] = props.date.split('-').map(Number)
   const dateObj = new Date(year, month - 1, day)
   
   return dateObj.toLocaleDateString('id-ID', {
@@ -39,7 +39,8 @@ const formattedHumanDate = computed(() => {
 })
 
 const predictions = computed<ElementType[]>(() => {
-  const [year, month, day] = props.date.split('-').map(Number)
+  // tambahkan nilai default
+  const [year = 0, month = 1, day = 1] = props.date.split('-').map(Number)
   const selected = Date.UTC(year, month - 1, day)
   const reference = Date.UTC(2026, 8, 1) 
   const diffDays = Math.floor((selected - reference) / 86400000)

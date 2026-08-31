@@ -29,7 +29,7 @@ const handleReset = () => {
 
 const dateValue = computed({
   get: () => {
-    const [year, month, day] = props.modelValue.split('-').map(Number)
+    const [year = 0, month = 1, day = 1] = props.modelValue.split('-').map(Number)
     return new Date(year, month - 1, day)
   },
   set: (val: Date | null) => {

@@ -31,7 +31,6 @@ const toggleTheme = () => {
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
-// pemrosesan riwayat event otomatis
 const syncPastEvents = () => {
   const now = new Date()
   const todayStr = formatDate(now)
@@ -42,22 +41,19 @@ const syncPastEvents = () => {
 
   eventTimes.forEach((time, index) => {
     const [hours = 0, minutes = 0] = time.split(':').map(Number)
-    
-    // batas akhir durasi adalah satu jam
     const endSeconds = hours * 3600 + minutes * 60 + 3600
 
     if (currentSeconds >= endSeconds) {
       const exists = history.some((e) => e.date === todayStr && e.time === time)
 
       if (!exists) {
-        const [year, month, day] = todayStr.split('-').map(Number)
+        // berikan nilai default untuk mencegah error typescript (number | undefined)
+        const [year = 0, month = 1, day = 1] = todayStr.split('-').map(Number)
         
-        // penyesuaian zona waktu
         const selected = Date.UTC(year, month - 1, day)
         const reference = Date.UTC(2026, 8, 1)
         const diffDays = Math.floor((selected - reference) / 86400000)
 
-        // sinkronisasi kalkulasi elemen
         const totalEvents = (diffDays * 8) + index
         const offset = 1
         const elementIndex = (((totalEvents + offset) % elements.length) + elements.length) % elements.length
@@ -65,7 +61,8 @@ const syncPastEvents = () => {
         history.push({
           date: todayStr,
           time,
-          element: elements[elementIndex]
+          // tambahkan tanda seru (!) untuk memberitahu TS bahwa data pasti ada
+          element: elements[elementIndex]!
         })
         updated = true
       }
@@ -73,7 +70,6 @@ const syncPastEvents = () => {
   })
 
   if (updated) {
-    // penyusunan riwayat dari data terbaru
     history.sort((a, b) => {
       if (a.date !== b.date) return b.date.localeCompare(a.date)
       return eventTimes.indexOf(b.time) - eventTimes.indexOf(a.time)
@@ -86,7 +82,12 @@ const syncPastEvents = () => {
 onMounted(() => {
   const savedEvents = localStorage.getItem(STORAGE_KEY)
   if (savedEvents) {
-    events.value = JSON.parse(savedEvents)
+    try {
+      const parsedEvents = JSON.parse(savedEvents)
+      events.value = parsedEvents.filter((e: EventRecord) => elements.includes(e.element))
+    } catch (error) {
+      events.value = []
+    }
   }
 
   const savedTheme = localStorage.getItem('theme')
@@ -96,8 +97,6 @@ onMounted(() => {
   }
 
   syncPastEvents()
-  
-  // pengecekan berkala
   syncTimer = setInterval(syncPastEvents, 10000)
 })
 
@@ -119,11 +118,11 @@ watch(
     <div class="mx-auto max-w-2xl">
       <header class="mb-8">
         <div>
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-            Prediksi Event Pulau Element
+          <h1 class="text-4xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+            Fish It: Element Tracker
           </h1>
           <p class="mt-1.5 text-sm sm:text-base text-zinc-500 dark:text-zinc-400">
-            Lihat prediksi jadwal event di Pulau Element berdasarkan tanggal yang dipilih. Data ini bersifat prediktif dan dapat berubah sewaktu-waktu.
+            Pantau jadwal rotasi Volcano, Blizzard, dan Storm di Element Island. Jangan lewatkan momen mancing terbaikmu!
           </p>
         </div>
       </header>
@@ -141,7 +140,6 @@ watch(
       </div>
     </div>
 
-    <!-- tombol dark mode fixed -->
     <button
       @click="toggleTheme"
       class="fixed bottom-6 right-6 z-50 rounded-full bg-white p-3.5 text-zinc-500 shadow-lg ring-1 ring-zinc-200 transition-all hover:bg-zinc-50 hover:text-zinc-900 dark:bg-zinc-900 dark:text-zinc-400 dark:ring-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
