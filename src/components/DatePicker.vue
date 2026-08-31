@@ -71,7 +71,7 @@ onUnmounted(() => {
         v-if="isNotToday"
         @click="handleReset"
         type="button"
-        class="text-xs font-medium text-blue-600 outline-none transition-colors hover:text-blue-700 focus:underline dark:text-blue-400 dark:hover:text-blue-300"
+        class="text-xs font-medium text-blue-600 outline-none transition-colors hover:text-blue-700 underline dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
       >
         Reset ke Hari Ini
       </button>
@@ -87,6 +87,7 @@ onUnmounted(() => {
       :format-locale="id"
       class="custom-datepicker"
       placeholder="Pilih jadwal event"
+      :min-date="new Date()"
     />
   </div>
 </template>
@@ -133,5 +134,9 @@ html:not(.dark) .custom-datepicker .dp__input:focus {
 html.dark .custom-datepicker .dp__input:focus {
   background-color: var(--color-zinc-900);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-zinc-800) 50%, transparent) !important;
+}
+
+.dp--clear-btn {
+  display: none !important;
 }
 </style>

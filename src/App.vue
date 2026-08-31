@@ -115,9 +115,9 @@ watch(
 </script>
 
 <template>
-  <main class="min-h-screen bg-zinc-50 p-4 transition-colors duration-300 sm:p-6 md:p-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+  <main class="min-h-screen bg-zinc-50 p-4 py-8 transition-colors duration-300 sm:p-6 md:p-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 relative">
     <div class="mx-auto max-w-2xl">
-      <header class="mb-8 flex items-start justify-between">
+      <header class="mb-8">
         <div>
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
             Prediksi Event Pulau Element
@@ -126,15 +126,6 @@ watch(
             Lihat prediksi jadwal event di Pulau Element berdasarkan tanggal yang dipilih. Data ini bersifat prediktif dan dapat berubah sewaktu-waktu.
           </p>
         </div>
-
-        <button
-          @click="toggleTheme"
-          class="rounded-full bg-white p-2.5 text-zinc-500 shadow-sm ring-1 ring-zinc-200 transition-all hover:bg-zinc-50 hover:text-zinc-900 dark:bg-zinc-900 dark:text-zinc-400 dark:ring-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer"
-          aria-label="Toggle dark mode"
-        >
-          <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-        </button>
       </header>
 
       <div class="space-y-6">
@@ -149,5 +140,15 @@ watch(
         <EventHistory :events="events" :date="selectedDate" />
       </div>
     </div>
+
+    <!-- tombol dark mode fixed -->
+    <button
+      @click="toggleTheme"
+      class="fixed bottom-6 right-6 z-50 rounded-full bg-white p-3.5 text-zinc-500 shadow-lg ring-1 ring-zinc-200 transition-all hover:bg-zinc-50 hover:text-zinc-900 dark:bg-zinc-900 dark:text-zinc-400 dark:ring-zinc-800 dark:hover:bg-zinc-800 dark:hover:text-zinc-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-zinc-950"
+      aria-label="Toggle dark mode"
+    >
+      <svg v-if="isDark" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <svg v-else xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
   </main>
 </template>

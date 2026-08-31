@@ -15,7 +15,6 @@ const now = ref(new Date())
 const eventItemRefs = ref<any[]>([])
 let timer: ReturnType<typeof setInterval>
 
-// batas durasi dalam menit
 const EVENT_DURATION = 60
 
 const formatDate = (date: Date = new Date()) => {
@@ -26,19 +25,27 @@ const formatDate = (date: Date = new Date()) => {
   return `${year}-${month}-${day}`
 }
 
+// format tanggal ke bahasa indonesia
+const formattedHumanDate = computed(() => {
+  const [year, month, day] = props.date.split('-').map(Number)
+  const dateObj = new Date(year, month - 1, day)
+  
+  return dateObj.toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  })
+})
+
 const predictions = computed<ElementType[]>(() => {
   const [year, month, day] = props.date.split('-').map(Number)
-  
-  // penyesuaian zona waktu utc
   const selected = Date.UTC(year, month - 1, day)
   const reference = Date.UTC(2026, 8, 1) 
   const diffDays = Math.floor((selected - reference) / 86400000)
 
   return eventTimes.map((_, index): ElementType => {
-    // perhitungan total event linier berkesinambungan
     const totalEvents = (diffDays * 8) + index
-    
-    // offset 1 menyesuaikan posisi pola elemen
     const offset = 1 
     const elementIndex = (((totalEvents + offset) % elements.length) + elements.length) % elements.length
     
@@ -62,7 +69,6 @@ const isActive = (time: string) => {
   return currentTimeSeconds.value >= start && currentTimeSeconds.value < end
 }
 
-// deteksi event kadaluwarsa pada hari berjalan
 const isPastEvent = (time: string) => {
   if (props.date !== formatDate()) return false
   const end = timeToSeconds(time) + (EVENT_DURATION * 60)
@@ -105,7 +111,6 @@ const getCountdownInfo = (time: string) => {
 }
 
 onMounted(() => {
-  // pembaruan waktu berjalan
   timer = setInterval(() => { now.value = new Date() }, 1000)
   
   nextTick(() => {
@@ -130,8 +135,8 @@ onUnmounted(() => { clearInterval(timer) })
       <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">
         Jadwal Event
       </h2>
-      <p class="text-sm text-zinc-500 dark:text-zinc-400">
-        {{ date }}
+      <p class="text-sm text-zinc-500 dark:text-zinc-400 capitalize">
+        {{ formattedHumanDate }}
       </p>
     </div>
 
