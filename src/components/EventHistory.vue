@@ -5,6 +5,7 @@ import EventItem from './EventItem.vue'
 
 const props = defineProps<{
   events: EventRecord[]
+  date: string
 }>()
 
 // status panel
@@ -14,6 +15,11 @@ const isOpen = ref(false)
 const todayEvents = computed(() => {
   const now = new Date()
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  
+  // sembunyikan riwayat jika tanggal yang dipilih bukan hari ini
+  if (props.date !== todayStr) {
+    return []
+  }
   
   return props.events.filter(e => e.date === todayStr)
 })

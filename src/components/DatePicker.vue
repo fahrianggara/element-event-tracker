@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+const props = defineProps<{
   modelValue: string
 }>()
 
@@ -12,16 +14,45 @@ const handleChange = (event: Event) => {
 
   emit('update:modelValue', target.value)
 }
+
+// format tanggal hari ini
+const getToday = () => {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+// cek apakah tanggal yang dipilih bukan hari ini
+const isNotToday = computed(() => props.modelValue !== getToday())
+
+// kembalikan nilai ke tanggal hari ini
+const handleReset = () => {
+  emit('update:modelValue', getToday())
+}
 </script>
 
 <template>
   <div>
-    <label
-      for="event-date"
-      class="mb-2.5 block text-sm font-semibold text-zinc-700 dark:text-zinc-300"
-    >
-      Pilih Tanggal
-    </label>
+    <div class="mb-2.5 flex items-center justify-between">
+      <label
+        for="event-date"
+        class="block text-sm font-semibold text-zinc-700 dark:text-zinc-300"
+      >
+        Pilih Tanggal
+      </label>
+
+      <button
+        v-if="isNotToday"
+        @click="handleReset"
+        type="button"
+        class="text-xs font-medium text-blue-600 outline-none transition-colors hover:text-blue-700 underline dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+      >
+        Reset ke Hari Ini
+      </button>
+    </div>
 
     <input
       id="event-date"

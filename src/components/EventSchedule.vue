@@ -15,6 +15,7 @@ const now = ref(new Date())
 const eventItemRefs = ref<any[]>([])
 let timer: ReturnType<typeof setInterval>
 
+// batas durasi dalam menit
 const EVENT_DURATION = 60
 
 const formatDate = (date: Date = new Date()) => {
@@ -27,13 +28,17 @@ const formatDate = (date: Date = new Date()) => {
 
 const predictions = computed<ElementType[]>(() => {
   const [year, month, day] = props.date.split('-').map(Number)
+  
+  // penyesuaian zona waktu utc
   const selected = Date.UTC(year, month - 1, day)
   const reference = Date.UTC(2026, 8, 1) 
   const diffDays = Math.floor((selected - reference) / 86400000)
 
   return eventTimes.map((_, index): ElementType => {
-    const chronoIndex = index < 6 ? index + 2 : index - 6
-    const totalEvents = (diffDays * 8) + chronoIndex
+    // perhitungan total event linier berkesinambungan
+    const totalEvents = (diffDays * 8) + index
+    
+    // offset 1 menyesuaikan posisi pola elemen
     const offset = 1 
     const elementIndex = (((totalEvents + offset) % elements.length) + elements.length) % elements.length
     
@@ -57,7 +62,7 @@ const isActive = (time: string) => {
   return currentTimeSeconds.value >= start && currentTimeSeconds.value < end
 }
 
-// deteksi event yang sudah selesai (hanya berlaku hari ini)
+// deteksi event kadaluwarsa pada hari berjalan
 const isPastEvent = (time: string) => {
   if (props.date !== formatDate()) return false
   const end = timeToSeconds(time) + (EVENT_DURATION * 60)
@@ -100,6 +105,7 @@ const getCountdownInfo = (time: string) => {
 }
 
 onMounted(() => {
+  // pembaruan waktu berjalan
   timer = setInterval(() => { now.value = new Date() }, 1000)
   
   nextTick(() => {

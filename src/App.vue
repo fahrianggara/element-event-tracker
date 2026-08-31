@@ -31,7 +31,7 @@ const toggleTheme = () => {
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
-// sinkronisasi event yang sudah selesai ke riwayat
+// pemrosesan riwayat event otomatis
 const syncPastEvents = () => {
   const now = new Date()
   const todayStr = formatDate(now)
@@ -51,12 +51,14 @@ const syncPastEvents = () => {
 
       if (!exists) {
         const [year, month, day] = todayStr.split('-').map(Number)
+        
+        // penyesuaian zona waktu
         const selected = Date.UTC(year, month - 1, day)
         const reference = Date.UTC(2026, 8, 1)
         const diffDays = Math.floor((selected - reference) / 86400000)
 
-        const chronoIndex = index < 6 ? index + 2 : index - 6
-        const totalEvents = (diffDays * 8) + chronoIndex
+        // sinkronisasi kalkulasi elemen
+        const totalEvents = (diffDays * 8) + index
         const offset = 1
         const elementIndex = (((totalEvents + offset) % elements.length) + elements.length) % elements.length
 
@@ -71,7 +73,7 @@ const syncPastEvents = () => {
   })
 
   if (updated) {
-    // urutkan riwayat dari yang paling baru
+    // penyusunan riwayat dari data terbaru
     history.sort((a, b) => {
       if (a.date !== b.date) return b.date.localeCompare(a.date)
       return eventTimes.indexOf(b.time) - eventTimes.indexOf(a.time)
@@ -93,10 +95,9 @@ onMounted(() => {
     document.documentElement.classList.add('dark')
   }
 
-  // periksa event yang selesai saat aplikasi dibuka
   syncPastEvents()
   
-  // jalankan pengecekan otomatis setiap sepuluh detik
+  // pengecekan berkala
   syncTimer = setInterval(syncPastEvents, 10000)
 })
 
@@ -119,10 +120,10 @@ watch(
       <header class="mb-8 flex items-start justify-between">
         <div>
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-            Element Tracker
+            Prediksi Event Pulau Element
           </h1>
           <p class="mt-1.5 text-sm sm:text-base text-zinc-500 dark:text-zinc-400">
-            Lihat prediksi event berdasarkan tanggal dengan mudah.
+            Lihat prediksi jadwal event di Pulau Element berdasarkan tanggal yang dipilih. Data ini bersifat prediktif dan dapat berubah sewaktu-waktu.
           </p>
         </div>
 
@@ -145,8 +146,7 @@ watch(
           <EventSchedule :date="selectedDate" />
         </section>
 
-        <!-- component riwayat terbaru -->
-        <EventHistory :events="events" />
+        <EventHistory :events="events" :date="selectedDate" />
       </div>
     </div>
   </main>
