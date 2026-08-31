@@ -7,14 +7,14 @@ export interface EventRecord {
 }
 
 export const eventTimes = [
+    '01:00',
+    '04:00',
     '07:00',
     '10:00',
     '13:00',
     '17:00',
     '19:00',
     '22:00',
-    '01:00',
-    '04:00',
 ]
 
 export const elements: ElementType[] = [

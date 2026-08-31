@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import DatePicker from './components/DatePicker.vue'
 import EventSchedule from './components/EventSchedule.vue'
-import { onMounted, ref, watch } from 'vue'
+import EventHistory from './components/EventHistory.vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import {
   eventTimes,
-  elementLabels,
+  elements,
   type EventRecord,
 } from './data/events'
 
 const STORAGE_KEY = 'element-event-tracker'
+
+let syncTimer: ReturnType<typeof setInterval>
 
 const formatDate = (date: Date = new Date()) => {
   const year = date.getFullYear()
@@ -20,11 +23,64 @@ const formatDate = (date: Date = new Date()) => {
 
 const selectedDate = ref(formatDate())
 const events = ref<EventRecord[]>([])
-
-// status tema saat ini
 const isDark = ref(false)
 
-// memuat data lokal dan preferensi tema
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  document.documentElement.classList.toggle('dark', isDark.value)
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+
+// sinkronisasi event yang sudah selesai ke riwayat
+const syncPastEvents = () => {
+  const now = new Date()
+  const todayStr = formatDate(now)
+  const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
+
+  let updated = false
+  const history = [...events.value]
+
+  eventTimes.forEach((time, index) => {
+    const [hours = 0, minutes = 0] = time.split(':').map(Number)
+    
+    // batas akhir durasi adalah satu jam
+    const endSeconds = hours * 3600 + minutes * 60 + 3600
+
+    if (currentSeconds >= endSeconds) {
+      const exists = history.some((e) => e.date === todayStr && e.time === time)
+
+      if (!exists) {
+        const [year, month, day] = todayStr.split('-').map(Number)
+        const selected = Date.UTC(year, month - 1, day)
+        const reference = Date.UTC(2026, 8, 1)
+        const diffDays = Math.floor((selected - reference) / 86400000)
+
+        const chronoIndex = index < 6 ? index + 2 : index - 6
+        const totalEvents = (diffDays * 8) + chronoIndex
+        const offset = 1
+        const elementIndex = (((totalEvents + offset) % elements.length) + elements.length) % elements.length
+
+        history.push({
+          date: todayStr,
+          time,
+          element: elements[elementIndex]
+        })
+        updated = true
+      }
+    }
+  })
+
+  if (updated) {
+    // urutkan riwayat dari yang paling baru
+    history.sort((a, b) => {
+      if (a.date !== b.date) return b.date.localeCompare(a.date)
+      return eventTimes.indexOf(b.time) - eventTimes.indexOf(a.time)
+    })
+
+    events.value = history
+  }
+}
+
 onMounted(() => {
   const savedEvents = localStorage.getItem(STORAGE_KEY)
   if (savedEvents) {
@@ -36,16 +92,18 @@ onMounted(() => {
     isDark.value = true
     document.documentElement.classList.add('dark')
   }
+
+  // periksa event yang selesai saat aplikasi dibuka
+  syncPastEvents()
+  
+  // jalankan pengecekan otomatis setiap sepuluh detik
+  syncTimer = setInterval(syncPastEvents, 10000)
 })
 
-// toggle tema aplikasi
-const toggleTheme = () => {
-  isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
+onUnmounted(() => {
+  clearInterval(syncTimer)
+})
 
-// memantau perubahan event
 watch(
   events,
   (newEvents) => {
@@ -58,7 +116,6 @@ watch(
 <template>
   <main class="min-h-screen bg-zinc-50 p-4 transition-colors duration-300 sm:p-6 md:p-8 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
     <div class="mx-auto max-w-2xl">
-      <!-- Header -->
       <header class="mb-8 flex items-start justify-between">
         <div>
           <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
@@ -80,50 +137,16 @@ watch(
       </header>
 
       <div class="space-y-6">
-        <!-- Date Picker -->
         <section class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800 sm:p-6">
           <DatePicker v-model="selectedDate" />
         </section>
 
-        <!-- Schedule -->
         <section class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800 sm:p-6">
           <EventSchedule :date="selectedDate" />
         </section>
 
-        <!-- History -->
-        <section class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800 sm:p-6">
-          <h2 class="mb-4 text-lg font-semibold text-zinc-900 dark:text-white">
-            Riwayat Event
-          </h2>
-
-          <div
-            v-if="events.length === 0"
-            class="flex items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-zinc-50 py-8 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400"
-          >
-            Belum ada event yang dicatat.
-          </div>
-
-          <div v-else class="space-y-3">
-            <div
-              v-for="event in events"
-              :key="`${event.date}-${event.time}`"
-              class="flex items-center justify-between rounded-xl bg-zinc-50 p-3.5 ring-1 ring-zinc-200 dark:bg-zinc-800/50 dark:ring-zinc-800"
-            >
-              <div class="flex items-center gap-3 text-sm">
-                <span class="font-medium text-zinc-700 dark:text-zinc-300">
-                  {{ event.date }}
-                </span>
-                <span class="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-600"></span>
-                <span class="font-medium text-zinc-700 dark:text-zinc-300">
-                  {{ event.time }}
-                </span>
-              </div>
-              <span class="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-zinc-700 shadow-sm ring-1 ring-inset ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:ring-zinc-700">
-                {{ elementLabels[event.element] }}
-              </span>
-            </div>
-          </div>
-        </section>
+        <!-- component riwayat terbaru -->
+        <EventHistory :events="events" />
       </div>
     </div>
   </main>

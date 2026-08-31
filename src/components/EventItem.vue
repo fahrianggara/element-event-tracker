@@ -7,6 +7,7 @@ defineProps<{
   active?: boolean
   isNext?: boolean
   countdown?: { label: string; clock: string } | null
+  subtitle?: string
 }>()
 
 const elementInfo: Record<
@@ -77,7 +78,6 @@ const elementInfo: Record<
           Belum diketahui
         </p>
 
-        <!-- dynamic digital clock ux -->
         <div v-if="countdown" class="mt-1 flex items-center gap-1.5">
           <span class="text-[11px] text-zinc-500 dark:text-zinc-400">{{ countdown.label }}</span>
           <span 
@@ -92,7 +92,7 @@ const elementInfo: Record<
           </span>
         </div>
         <p v-else class="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
-          Prediksi event
+          {{ subtitle || 'Prediksi event' }}
         </p>
       </div>
 

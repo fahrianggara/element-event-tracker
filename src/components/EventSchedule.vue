@@ -27,26 +27,14 @@ const formatDate = (date: Date = new Date()) => {
 
 const predictions = computed<ElementType[]>(() => {
   const [year, month, day] = props.date.split('-').map(Number)
-  
-  // avoids browser timezone shifts
   const selected = Date.UTC(year, month - 1, day)
-  
-  // sets reference anchor to september 1 2026
   const reference = Date.UTC(2026, 8, 1) 
-  
   const diffDays = Math.floor((selected - reference) / 86400000)
 
   return eventTimes.map((_, index): ElementType => {
-    // maps morning events first
     const chronoIndex = index < 6 ? index + 2 : index - 6
-    
-    // counts total events since anchor
     const totalEvents = (diffDays * 8) + chronoIndex
-    
-    // aligns reference date with fire
     const offset = 1 
-    
-    // resolves cycle for past dates
     const elementIndex = (((totalEvents + offset) % elements.length) + elements.length) % elements.length
     
     return elements[elementIndex] as ElementType
@@ -64,22 +52,22 @@ const timeToSeconds = (time: string) => {
 
 const isActive = (time: string) => {
   if (props.date !== formatDate()) return false
-
   const start = timeToSeconds(time)
   const end = start + (EVENT_DURATION * 60)
-
   return currentTimeSeconds.value >= start && currentTimeSeconds.value < end
+}
+
+// deteksi event yang sudah selesai (hanya berlaku hari ini)
+const isPastEvent = (time: string) => {
+  if (props.date !== formatDate()) return false
+  const end = timeToSeconds(time) + (EVENT_DURATION * 60)
+  return currentTimeSeconds.value >= end
 }
 
 const nextEventTime = computed(() => {
   if (props.date !== formatDate()) return null
-
-  const upcoming = eventTimes.filter(time => {
-    return timeToSeconds(time) > currentTimeSeconds.value
-  })
-
+  const upcoming = eventTimes.filter(time => timeToSeconds(time) > currentTimeSeconds.value)
   if (upcoming.length === 0) return null
-
   upcoming.sort((a, b) => timeToSeconds(a) - timeToSeconds(b))
   return upcoming[0]
 })
@@ -88,10 +76,8 @@ const formatClock = (totalSeconds: number) => {
   const h = Math.floor(totalSeconds / 3600)
   const m = Math.floor((totalSeconds % 3600) / 60)
   const s = totalSeconds % 60
-  
   const paddedM = m.toString().padStart(2, '0')
   const paddedS = s.toString().padStart(2, '0')
-  
   if (h > 0) {
     const paddedH = h.toString().padStart(2, '0')
     return `${paddedH}:${paddedM}:${paddedS}`
@@ -105,45 +91,31 @@ const getCountdownInfo = (time: string) => {
     const diff = end - currentTimeSeconds.value
     return { label: 'Berakhir dalam', clock: formatClock(diff) }
   }
-  
   if (time === nextEventTime.value) {
     const start = timeToSeconds(time)
     const diff = start - currentTimeSeconds.value
     return { label: 'Mulai dalam', clock: formatClock(diff) }
   }
-  
   return null
 }
 
 onMounted(() => {
-  // refreshes current time every second
-  timer = setInterval(() => {
-    now.value = new Date()
-  }, 1000)
+  timer = setInterval(() => { now.value = new Date() }, 1000)
   
   nextTick(() => {
-    // locates target event index
     let targetIndex = eventTimes.findIndex(t => isActive(t))
-    
     if (targetIndex === -1) {
       targetIndex = eventTimes.findIndex(t => t === nextEventTime.value)
     }
     
     if (targetIndex !== -1 && eventItemRefs.value[targetIndex]) {
       const el = eventItemRefs.value[targetIndex].$el
-      
-      if (el) {
-        // scrolls to active event
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   })
 })
 
-onUnmounted(() => {
-  // clears interval timer
-  clearInterval(timer)
-})
+onUnmounted(() => { clearInterval(timer) })
 </script>
 
 <template>
@@ -162,6 +134,7 @@ onUnmounted(() => {
         v-for="(time, index) in eventTimes"
         :key="`${date}-${time}`"
         ref="eventItemRefs"
+        v-show="!isPastEvent(time)"
         :time="time"
         :element="predictions[index] ?? null"
         :active="isActive(time)"
